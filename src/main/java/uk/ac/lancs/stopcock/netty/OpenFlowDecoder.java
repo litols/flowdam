@@ -18,7 +18,7 @@ import java.util.List;
  * OpenFlowDecode is responsible for the first pass of decoding incoming OpenFlow packets and separating them into
  * the header and raw data. The pipeline will have already split up incoming data into individual packets.
  */
-public class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
+class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> objects) throws Exception {
         /* Sanity check. */

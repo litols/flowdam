@@ -10,7 +10,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import uk.ac.lancs.stopcock.Proxy;
+import uk.ac.lancs.stopcock.proxy.Proxy;
 
 /**
  * OpenFlowChannelInitializer provides the facility to setup up a Netty connection capable of processing OpenFlow

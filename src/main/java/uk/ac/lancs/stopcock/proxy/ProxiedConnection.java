@@ -4,7 +4,7 @@
  * All rights reserved, unauthorised distribution of source code, compiled
  * binary or usage is expressly prohibited.
  */
-package uk.ac.lancs.stopcock;
+package uk.ac.lancs.stopcock.proxy;
 
 import io.netty.channel.Channel;
 import uk.ac.lancs.stopcock.openflow.messages.Container;

@@ -3,8 +3,8 @@ package uk.ac.lancs.stopcock.netty;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
-import uk.ac.lancs.stopcock.ProxiedConnection;
-import uk.ac.lancs.stopcock.Proxy;
+import uk.ac.lancs.stopcock.proxy.ProxiedConnection;
+import uk.ac.lancs.stopcock.proxy.Proxy;
 import uk.ac.lancs.stopcock.openflow.messages.Container;
 
 /**
@@ -12,7 +12,7 @@ import uk.ac.lancs.stopcock.openflow.messages.Container;
  * wishing to participate in OpenFlow. Once the channel is active it attempts to create the onwards channel to the
  * controller.
  */
-public class OpenFlowChannelInboundUpstreamHandler extends OpenFlowChannelInboundHandler {
+class OpenFlowChannelInboundUpstreamHandler extends OpenFlowChannelInboundHandler {
     /**
      * Constructs a new Handler ready to serve the Channel.
      *

@@ -4,7 +4,7 @@
  * All rights reserved, unauthorised distribution of source code, compiled
  * binary or usage is expressly prohibited.
  */
-package uk.ac.lancs.stopcock;
+package uk.ac.lancs.stopcock.proxy;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -16,6 +16,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import uk.ac.lancs.stopcock.netty.OpenFlowChannelInitializer;
+import uk.ac.lancs.stopcock.proxy.ProxiedConnection;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;

@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * OpenFlowEncoder handles sending of Containers, which include a Header and raw data dump.
  */
-public class OpenFlowEncoder extends MessageToMessageEncoder<Container> {
+class OpenFlowEncoder extends MessageToMessageEncoder<Container> {
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Container container, List<Object> objects) throws Exception {
         /* Construct a ByteBuf with the expected size of the output OpenFlow packet. */

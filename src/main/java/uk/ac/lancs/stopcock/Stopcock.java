@@ -6,6 +6,8 @@
  */
 package uk.ac.lancs.stopcock;
 
+import uk.ac.lancs.stopcock.proxy.Proxy;
+
 import java.net.InetSocketAddress;
 
 /**

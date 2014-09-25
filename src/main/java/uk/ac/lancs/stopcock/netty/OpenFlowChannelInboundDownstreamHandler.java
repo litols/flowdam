@@ -1,15 +1,15 @@
 package uk.ac.lancs.stopcock.netty;
 
 import io.netty.channel.ChannelHandlerContext;
-import uk.ac.lancs.stopcock.ProxiedConnection;
-import uk.ac.lancs.stopcock.Proxy;
+import uk.ac.lancs.stopcock.proxy.ProxiedConnection;
+import uk.ac.lancs.stopcock.proxy.Proxy;
 import uk.ac.lancs.stopcock.openflow.messages.Container;
 
 /**
  * OpenFlowChannelInboundDownstreamHandler is the end of the Netty pipeline for outgoing connections to controllers
  * wishing to control via OpenFlow.
  */
-public class OpenFlowChannelInboundDownstreamHandler extends OpenFlowChannelInboundHandler {
+class OpenFlowChannelInboundDownstreamHandler extends OpenFlowChannelInboundHandler {
     /**
      * Constructs a new Handler ready to serve the Channel.
      *
