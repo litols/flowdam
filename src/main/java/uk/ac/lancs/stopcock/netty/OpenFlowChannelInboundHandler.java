@@ -11,7 +11,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import uk.ac.lancs.stopcock.proxy.Proxy;
-import uk.ac.lancs.stopcock.openflow.messages.Container;
+import uk.ac.lancs.stopcock.openflow.Container;
 
 /**
  * OpenFlowChannelInboundHandler looks after idle timeouts and other common functionality between an upstream and

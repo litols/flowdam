@@ -16,17 +16,19 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import uk.ac.lancs.stopcock.netty.OpenFlowChannelInitializer;
-import uk.ac.lancs.stopcock.proxy.ProxiedConnection;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A Proxy object is responsible for managing ProxiedConnections through it, it establishes the relationship between
  * an incoming connection to an outgoing connection.
  */
 public class Proxy {
+    /** Unique ID number for connection tracking. */
+    private AtomicInteger uniqueIDSource = new AtomicInteger(0);
     /** Group for handling incoming connections (at the bind()/accept() level). */
     private EventLoopGroup bossGroup = new NioEventLoopGroup();
     /** Group for handling all connections after they have been accept()'d. */
@@ -79,7 +81,7 @@ public class Proxy {
      * @return ProxiedConnection representing this new Upstream connection
      */
     public synchronized ProxiedConnection registerUpstream(Channel newUpstream) {
-        ProxiedConnection proxiedConnection = new ProxiedConnection();
+        ProxiedConnection proxiedConnection = new ProxiedConnection(uniqueIDSource.incrementAndGet());
         proxiedConnections.put(newUpstream, proxiedConnection);
 
         proxiedConnection.registerUpstream(newUpstream);

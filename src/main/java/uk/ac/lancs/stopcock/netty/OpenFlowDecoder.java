@@ -9,8 +9,11 @@ package uk.ac.lancs.stopcock.netty;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
-import uk.ac.lancs.stopcock.openflow.messages.Container;
-import uk.ac.lancs.stopcock.openflow.messages.Header;
+import uk.ac.lancs.stopcock.openflow.Container;
+import uk.ac.lancs.stopcock.openflow.Header;
+import uk.ac.lancs.stopcock.openflow.Type;
+import uk.ac.lancs.stopcock.openflow.messages.OFPT;
+import uk.ac.lancs.stopcock.openflow.messages.switchconfiguration.OFPTFeaturesReply;
 
 import java.util.List;
 
@@ -28,7 +31,7 @@ class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
 
         /* Read OpenFlow Header. */
         short version = byteBuf.readUnsignedByte();
-        short type = byteBuf.readUnsignedByte();
+        short typeId = byteBuf.readUnsignedByte();
         int length = byteBuf.readUnsignedShort();
         long transactionId = byteBuf.readUnsignedInt();
 
@@ -47,8 +50,17 @@ class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
         }
 
         /* Construct the OpenFlow header and container for both it and data. */
-        Header header = new Header(version, type, length, transactionId);
-        Container container = new Container(header, data);
+        Header header = new Header(version, typeId, length, transactionId);
+        Type type = Type.getById(typeId);
+
+        OFPT ofpt = null;
+
+        /* Construct OFPT object if possible. */
+        if (type != null && type.canCreateInstance()) {
+            ofpt = type.parseTypePayload(data);
+        }
+
+        Container container = new Container(header, data, type, ofpt);
 
         /* Add to the Netty pipeline. */
         objects.add(container);

@@ -7,7 +7,9 @@
 package uk.ac.lancs.stopcock.proxy;
 
 import io.netty.channel.Channel;
-import uk.ac.lancs.stopcock.openflow.messages.Container;
+import uk.ac.lancs.stopcock.openflow.Container;
+import uk.ac.lancs.stopcock.openflow.Type;
+import uk.ac.lancs.stopcock.openflow.messages.switchconfiguration.OFPTFeaturesReply;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -17,6 +19,10 @@ import java.util.Queue;
  * controller outgoing connection.
  */
 public class ProxiedConnection {
+    /** Unique connection ID. */
+    private int uniqueId;
+    /** Datapath ID */
+    private byte[] datapathId = new byte[8];
     /** Netty channel used for the switch connection. */
     private Channel upstream;
     /** Netty channel used for the controller connection. */
@@ -25,6 +31,15 @@ public class ProxiedConnection {
     private boolean downstreamActive = false;
     /** Queue for outgoing packets to controller which could not yet be sent. */
     private Queue<Container> downstreamQueue = new ArrayDeque<>();
+
+    /**
+     * Construct a new ProxiedConnection with a unique ID for reference and log tracking.
+     *
+     * @param uniqueId unique ID to identify this connection
+     */
+    public ProxiedConnection(int uniqueId) {
+        this.uniqueId = uniqueId;
+    }
 
     /**
      * Register the upstream channel against this proxied connection.
@@ -96,6 +111,11 @@ public class ProxiedConnection {
         } else {
             downstream.writeAndFlush(upstreamContainer);
         }
+
+        if (upstreamContainer.getMessageType() == Type.OFPT_FEATURES_REPLY) {
+            OFPTFeaturesReply featuresReply = (OFPTFeaturesReply) upstreamContainer.getPacket();
+            setDatapathId(featuresReply.getDatapathId());
+        }
     }
 
     /**
@@ -106,5 +126,32 @@ public class ProxiedConnection {
      */
     public synchronized void receiveDownstream(Container downstreamContainer) {
         upstream.writeAndFlush(downstreamContainer);
+    }
+
+    /**
+     * Get the unique ID number which refers to this particular connection.
+     *
+     * @return unique ID
+     */
+    public int getUniqueId() {
+        return uniqueId;
+    }
+
+    /**
+     * Set the datapath ID handled by this proxied connection.
+     *
+     * @param datapathId the datapath ID being handled
+     */
+    public void setDatapathId(byte[] datapathId) {
+        this.datapathId = datapathId;
+    }
+
+    /**
+     * Return the datapath ID handed by this proxied connection.
+     *
+     * @return the datapath ID being handled, or a zeroed byte[8] if not learnt yet
+     */
+    public byte[] getDatapathId() {
+        return datapathId;
     }
 }

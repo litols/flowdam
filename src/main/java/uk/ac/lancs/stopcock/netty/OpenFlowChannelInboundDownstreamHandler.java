@@ -1,9 +1,15 @@
+/*
+ * Stopcock - Copyright © 2014 - Lancaster University
+ *
+ * All rights reserved, unauthorised distribution of source code, compiled
+ * binary or usage is expressly prohibited.
+ */
 package uk.ac.lancs.stopcock.netty;
 
 import io.netty.channel.ChannelHandlerContext;
 import uk.ac.lancs.stopcock.proxy.ProxiedConnection;
 import uk.ac.lancs.stopcock.proxy.Proxy;
-import uk.ac.lancs.stopcock.openflow.messages.Container;
+import uk.ac.lancs.stopcock.openflow.Container;
 
 /**
  * OpenFlowChannelInboundDownstreamHandler is the end of the Netty pipeline for outgoing connections to controllers

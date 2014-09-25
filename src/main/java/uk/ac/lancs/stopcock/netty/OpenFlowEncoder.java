@@ -9,7 +9,7 @@ package uk.ac.lancs.stopcock.netty;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
-import uk.ac.lancs.stopcock.openflow.messages.Container;
+import uk.ac.lancs.stopcock.openflow.Container;
 
 import java.util.List;
 

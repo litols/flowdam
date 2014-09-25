@@ -4,7 +4,7 @@
  * All rights reserved, unauthorised distribution of source code, compiled
  * binary or usage is expressly prohibited.
  */
-package uk.ac.lancs.stopcock.openflow.messages;
+package uk.ac.lancs.stopcock.openflow;
 
 /**
  * Header represents the standard 8 byte OpenFlow header (all protocol versions).
