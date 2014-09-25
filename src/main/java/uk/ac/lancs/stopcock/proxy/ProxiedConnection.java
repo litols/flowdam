@@ -22,7 +22,9 @@ public class ProxiedConnection {
     /** Unique connection ID. */
     private int uniqueId;
     /** Datapath ID */
-    private byte[] datapathId = new byte[8];
+    private byte[] datapathId;
+    /** Datapath ID String Representation. */
+    private String datapathIdString;
     /** Netty channel used for the switch connection. */
     private Channel upstream;
     /** Netty channel used for the controller connection. */
@@ -39,6 +41,7 @@ public class ProxiedConnection {
      */
     public ProxiedConnection(int uniqueId) {
         this.uniqueId = uniqueId;
+        setDatapathId(new byte[8]);
     }
 
     /**
@@ -48,6 +51,7 @@ public class ProxiedConnection {
      */
     public synchronized void registerUpstream(Channel upstreamChannel) {
         upstream = upstreamChannel;
+        log(" Incoming Upstream Switch Connected: " + upstream.remoteAddress());
     }
 
     /**
@@ -57,6 +61,8 @@ public class ProxiedConnection {
      */
     public synchronized void registerDownstream(Channel downstreamChannel) {
         downstream = downstreamChannel;
+
+        log(" Outgoing Upstream Switch Connecting");
     }
 
     /**
@@ -65,6 +71,7 @@ public class ProxiedConnection {
      */
     public synchronized void activeDownstream() {
         downstreamActive = true;
+        log(" Outgoing Downstream Controller Connected: " + downstream.remoteAddress());
 
         Container container;
 
@@ -81,6 +88,8 @@ public class ProxiedConnection {
     public synchronized void unregisterUpstream() {
         upstream = null;
 
+        log(" Incoming Upstream Switch Disconnected");
+
         if (downstream != null) {
             downstream.close();
         }
@@ -93,6 +102,8 @@ public class ProxiedConnection {
     public synchronized void unregisterDownstream() {
         downstream = null;
         downstreamActive = false;
+
+        log(" Outgoing Downstream Controller Disconnected");
 
         if (upstream != null) {
             upstream.close();
@@ -112,10 +123,13 @@ public class ProxiedConnection {
             downstream.writeAndFlush(upstreamContainer);
         }
 
+        /* Record the datapath ID if it passed through. */
         if (upstreamContainer.getMessageType() == Type.OFPT_FEATURES_REPLY) {
             OFPTFeaturesReply featuresReply = (OFPTFeaturesReply) upstreamContainer.getPacket();
             setDatapathId(featuresReply.getDatapathId());
         }
+
+        log(false, upstreamContainer);
     }
 
     /**
@@ -126,6 +140,26 @@ public class ProxiedConnection {
      */
     public synchronized void receiveDownstream(Container downstreamContainer) {
         upstream.writeAndFlush(downstreamContainer);
+        log(true, downstreamContainer);
+    }
+
+    public void log(boolean fromController, Container container) {
+        log("[" + (fromController ? "C->S" : "S->C") + "][" + container.getMessageType() + "]");
+    }
+
+    public void log(String log) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("[");
+        stringBuilder.append(System.currentTimeMillis());
+        stringBuilder.append("][");
+        stringBuilder.append(uniqueId);
+        stringBuilder.append("][");
+        stringBuilder.append(datapathIdString);
+        stringBuilder.append("]");
+        stringBuilder.append(log);
+
+        System.out.println(stringBuilder);
     }
 
     /**
@@ -144,6 +178,14 @@ public class ProxiedConnection {
      */
     public void setDatapathId(byte[] datapathId) {
         this.datapathId = datapathId;
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (int i = 0; i < 8; i++) {
+            stringBuilder.append(String.format("%02x", datapathId[i]));
+        }
+
+        datapathIdString = stringBuilder.toString();
     }
 
     /**
