@@ -144,7 +144,7 @@ public class ProxiedConnection {
     }
 
     public void log(boolean fromController, Container container) {
-        log("[" + (fromController ? "C->S" : "S->C") + "][" + container.getMessageType() + "]");
+        log("[" + (fromController ? "C->S" : "S->C") + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]");
     }
 
     public void log(String log) {
