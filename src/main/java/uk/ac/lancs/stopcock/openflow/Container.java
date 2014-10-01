@@ -6,7 +6,7 @@
  */
 package uk.ac.lancs.stopcock.openflow;
 
-import uk.ac.lancs.stopcock.openflow.messages.OFPT;
+import org.projectfloodlight.openflow.protocol.OFMessage;
 
 /**
  * Container object encapsulates an OpenFlow header, the raw data and any objects created from the raw data.
@@ -18,8 +18,8 @@ public class Container {
     private byte[] data;
     /** The message type. */
     private Type messageType;
-    /** OFPT object representing the details of the packet. */
-    private OFPT packet;
+    /** OFMessage object representing the details of the packet. */
+    private OFMessage packet;
 
     /**
      * Construct a new OpenFlow packet Container.
@@ -28,7 +28,7 @@ public class Container {
      * @param data raw data from packet, not including header bytes
      * @param packet an interpreted version of the data in a packet.
      */
-    public Container(Header header, byte[] data, Type messageType, OFPT packet) {
+    public Container(Header header, byte[] data, Type messageType, OFMessage packet) {
         this.header = header;
         this.data = data;
         this.messageType = messageType;
@@ -68,7 +68,7 @@ public class Container {
      *
      * @return object representation of the packet
      */
-    public OFPT getPacket() {
+    public OFMessage getPacket() {
         return packet;
     }
 }

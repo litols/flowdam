@@ -7,9 +7,9 @@
 package uk.ac.lancs.stopcock.proxy;
 
 import io.netty.channel.Channel;
+import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import uk.ac.lancs.stopcock.openflow.Container;
 import uk.ac.lancs.stopcock.openflow.Type;
-import uk.ac.lancs.stopcock.openflow.messages.switchconfiguration.OFPTFeaturesReply;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -125,8 +125,8 @@ public class ProxiedConnection {
 
         /* Record the datapath ID if it passed through. */
         if (upstreamContainer.getMessageType() == Type.OFPT_FEATURES_REPLY) {
-            OFPTFeaturesReply featuresReply = (OFPTFeaturesReply) upstreamContainer.getPacket();
-            setDatapathId(featuresReply.getDatapathId());
+            OFFeaturesReply ofFeaturesReply = (OFFeaturesReply) upstreamContainer.getPacket();
+            setDatapathId(ofFeaturesReply.getDatapathId().getBytes());
         }
 
         log(false, upstreamContainer);
@@ -144,7 +144,7 @@ public class ProxiedConnection {
     }
 
     public void log(boolean fromController, Container container) {
-        log("[" + (fromController ? "C->S" : "S->C") + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]");
+        log("[" + (fromController ? "C->S" : "S->C") + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]" + container.getPacket().toString());
     }
 
     public void log(String log) {

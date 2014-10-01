@@ -9,6 +9,8 @@ package uk.ac.lancs.stopcock.netty;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
+import org.projectfloodlight.openflow.protocol.OFFactories;
+import org.projectfloodlight.openflow.protocol.OFMessage;
 import uk.ac.lancs.stopcock.openflow.Container;
 import uk.ac.lancs.stopcock.openflow.Header;
 import uk.ac.lancs.stopcock.openflow.Type;
@@ -40,27 +42,26 @@ class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
             throw new IllegalStateException();
         }
 
-        byte[] data;
+        byte[] originalData;
 
         /* Copy the data portion of the OpenFlow packet and store it. */
         if (length > 8) {
-            data = byteBuf.readBytes(length - 8).array();
+            originalData = byteBuf.readBytes(length - 8).array();
         } else {
-            data = null;
+            originalData = null;
         }
 
         /* Construct the OpenFlow header and container for both it and data. */
         Header header = new Header(version, typeId, length, transactionId);
         Type type = Type.getById(typeId);
 
-        OFPT ofpt = null;
+        /* Get full openflow packet for processing with openflowj */
+        byteBuf.resetReaderIndex();
 
-        /* Construct OFPT object if possible. */
-        if (type != null && type.canCreateInstance()) {
-            ofpt = type.parseTypePayload(data);
-        }
+        /* Call openflowj using our Netty 3.9.X -> Netty 4.0.0 proxy object. */
+        OFMessage message = OFFactories.getGenericReader().readFrom(new NettyCompatibilityChannelBuffer(byteBuf));
 
-        Container container = new Container(header, data, type, ofpt);
+        Container container = new Container(header, originalData, type, message);
 
         /* Add to the Netty pipeline. */
         objects.add(container);
