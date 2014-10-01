@@ -14,8 +14,6 @@ import org.projectfloodlight.openflow.protocol.OFMessage;
 import uk.ac.lancs.stopcock.openflow.Container;
 import uk.ac.lancs.stopcock.openflow.Header;
 import uk.ac.lancs.stopcock.openflow.Type;
-import uk.ac.lancs.stopcock.openflow.messages.OFPT;
-import uk.ac.lancs.stopcock.openflow.messages.switchconfiguration.OFPTFeaturesReply;
 
 import java.util.List;
 
