@@ -34,7 +34,8 @@ class OpenFlowChannelInboundUpstreamHandler extends OpenFlowChannelInboundHandle
         final Channel upstreamChannel = ctx.channel();
         proxy.registerUpstream(upstreamChannel);
 
-        /* Register onwards channel against self in proxy. */
+        /* Register onwards channel against self in proxy, this needs to be done before the connect otherwise there
+         * is a race condition. */
         final Channel downstreamChannel = proxy.onwardsChannel();
         proxy.registerDownstream(downstreamChannel, upstreamChannel);
 

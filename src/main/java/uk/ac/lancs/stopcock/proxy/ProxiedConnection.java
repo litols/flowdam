@@ -22,7 +22,10 @@ import uk.ac.lancs.stopcock.openflow.Type;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ProxiedConnection encapsulates the relationship between two Netty channels, the switch incoming connection and
@@ -51,6 +54,11 @@ public class ProxiedConnection {
     /** Queue for outgoing packets to controller which could not yet be sent. */
     private Queue<Container> downstreamQueue = new ArrayDeque<>();
 
+    /** Statistics on number of messages types received from upstream. */
+    private Map<Type, AtomicInteger> upstreamReceived = new HashMap<>();
+    /** Statistics on number of messages types received from downstream. */
+    private Map<Type, AtomicInteger> downstreamReceived = new HashMap<>();
+
     /**
      * Construct a new ProxiedConnection with a unique ID for reference and log tracking.
      *
@@ -59,6 +67,12 @@ public class ProxiedConnection {
     public ProxiedConnection(int uniqueId) {
         this.uniqueId = uniqueId;
         setDatapathId(new byte[8]);
+
+        /* Add zero'd statistics. */
+        for (Type type : Type.values()) {
+            upstreamReceived.put(type, new AtomicInteger(0));
+            downstreamReceived.put(type, new AtomicInteger(0));
+        }
     }
 
     /**
@@ -236,6 +250,13 @@ public class ProxiedConnection {
      * @param container the container to be logged
      */
     public void log(ProxyChannelType channelSource, ProxyChannelType channelDestination, Container container) {
+        /* Account messages received. */
+        if (channelSource == ProxyChannelType.SWITCH) {
+            upstreamReceived.get(container.getMessageType()).incrementAndGet();
+        } else {
+            downstreamReceived.get(container.getMessageType()).incrementAndGet();
+        }
+
         log("[" + channelSource + "->" + channelDestination + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]" + container.getPacket().toString());
     }
 
