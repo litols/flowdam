@@ -44,6 +44,11 @@ public class Proxy {
     /** Host/port pair for outgoing connections. */
     private InetSocketAddress connectTo;
 
+    /** Milliseconds before a Channel should be considered dead from lack of messages. */
+    private long idleReadTimeout = 2500;
+    /** Milliseconds before a Channel should send a ECHO request if its idle. */
+    private long idleWriteTimeout = 500;
+
     /* Map to link channels to a proxied connection. */
     private Map<Channel, ProxiedConnection> proxiedConnections = new HashMap<>();
 
@@ -148,5 +153,25 @@ public class Proxy {
      */
     public synchronized ProxiedConnection getProxiedConnection(Channel channel) {
         return proxiedConnections.get(channel);
+    }
+
+    /**
+     * Get the number of milliseconds before a read timeout should be declared on a Netty channel. Exceeding this value
+     * results in a channel being closed.
+     *
+     * @return number of milliseconds before a read timeout occurs
+     */
+    public long getIdleReadTimeout() {
+        return idleReadTimeout;
+    }
+
+    /**
+     * Get the number of milliseconds before a write timeout should be declared on a Netty channel. Exceeding this value
+     * results in an ECHO request being sent.
+     *
+     * @return number of milliseconds before a write timeout occurs
+     */
+    public long getIdleWriteTimeout() {
+        return idleWriteTimeout;
     }
 }

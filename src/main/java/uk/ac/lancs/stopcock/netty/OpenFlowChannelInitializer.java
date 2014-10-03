@@ -52,7 +52,7 @@ public class OpenFlowChannelInitializer extends ChannelInitializer<SocketChannel
         pipeline.addLast("openflowEncoder", new OpenFlowEncoder());
 
         /* Idle Handler, prevent a hung switch or controller from disrupting traffic.  */
-        pipeline.addLast("idleStateHandler", new IdleStateHandler(2500, 500, 0, TimeUnit.MILLISECONDS));
+        pipeline.addLast("idleStateHandler", new IdleStateHandler(proxy.getIdleReadTimeout(), proxy.getIdleWriteTimeout(), 0, TimeUnit.MILLISECONDS));
 
         /* OpenFlow Processor. */
         if (downstream) {
