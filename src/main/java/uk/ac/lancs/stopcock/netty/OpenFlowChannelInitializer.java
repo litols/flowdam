@@ -51,9 +51,8 @@ public class OpenFlowChannelInitializer extends ChannelInitializer<SocketChannel
         pipeline.addLast("openflowDecoder", new OpenFlowDecoder());
         pipeline.addLast("openflowEncoder", new OpenFlowEncoder());
 
-        /* Idle Handler, no longer then quarter of a millisecond idle before echo request, no more then half a second
-         * before we need to kill it.  */
-        pipeline.addLast("idleStateHandler", new IdleStateHandler(5000, 250, 0, TimeUnit.MILLISECONDS));
+        /* Idle Handler, prevent a hung switch or controller from disrupting traffic.  */
+        pipeline.addLast("idleStateHandler", new IdleStateHandler(2500, 500, 0, TimeUnit.MILLISECONDS));
 
         /* OpenFlow Processor. */
         if (downstream) {

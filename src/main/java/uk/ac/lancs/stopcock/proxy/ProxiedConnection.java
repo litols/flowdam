@@ -194,11 +194,26 @@ public class ProxiedConnection {
         }
     }
 
+    /**
+     * Send a container out specifying the destination by a Channel, used for sending ECHO requests from the Netty
+     * IdleStateHandler.
+     *
+     * @param channelSource channel type which is sending
+     * @param destination the destination Netty channel to send the container to
+     * @param container the container to send
+     */
     public synchronized void send(ProxyChannelType channelSource, Channel destination, Container container) {
         ProxyChannelType channelDestination = (destination == upstream ? ProxyChannelType.SWITCH : ProxyChannelType.CONTROLLER);
         send(channelSource, channelDestination, container);
     }
 
+    /**
+     * Send a container out specifying the destination by a ChannelType.
+     *
+     * @param channelSource channel type which is sending
+     * @param channelDestination channel type to send container to
+     * @param container the container to send
+     */
     public synchronized void send(ProxyChannelType channelSource, ProxyChannelType channelDestination, Container container) {
         Channel outputChannel = channelDestination == ProxyChannelType.SWITCH ? upstream : downstream;
 
@@ -286,7 +301,31 @@ public class ProxiedConnection {
         return datapathId;
     }
 
+    /**
+     * Look up a ChannelType by providing the Channel.
+     *
+     * @param channel channel to be looked up to find the ChannelType
+     * @return ChannelType identified by the channel
+     */
     public ProxyChannelType getProxyChannelType(Channel channel) {
         return (channel == downstream ? ProxyChannelType.CONTROLLER : ProxyChannelType.SWITCH);
+    }
+
+    /**
+     * Get the Upstream (Switch) OpenFlow version as dictated by the initial HELLO.
+     *
+     * @return OpenFlow version as dictated by the initial HELLO
+     */
+    public OFVersion getUpstreamVersion() {
+        return upstreamVersion;
+    }
+
+    /**
+     * Get the Downstream (Controller) OpenFlow version as dictated by the initial HELLO.
+     *
+     * @return OpenFlow version as dictated by the initial HELLO
+     */
+    public OFVersion getDownstreamVersion() {
+        return downstreamVersion;
     }
 }

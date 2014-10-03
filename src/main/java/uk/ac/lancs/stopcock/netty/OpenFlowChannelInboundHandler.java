@@ -40,14 +40,17 @@ abstract class OpenFlowChannelInboundHandler extends SimpleChannelInboundHandler
         if (evt instanceof IdleStateEvent) {
             ProxiedConnection proxiedConnection = proxy.getProxiedConnection(ctx.channel());
 
-            IdleStateEvent e = (IdleStateEvent) evt;
-            if (e.state() == IdleState.READER_IDLE) {
+            /* Skip echos unless we're fully connected. */
+            if (proxiedConnection.getDownstreamVersion() != null && proxiedConnection.getUpstreamVersion() != null) {
+                IdleStateEvent e = (IdleStateEvent) evt;
+                if (e.state() == IdleState.READER_IDLE) {
                 /* No packets have been received in a reasonable time period and as such should now be closed. */
-                proxiedConnection.log(" Read timeout, " + proxiedConnection.getProxyChannelType(ctx.channel()) + ".");
-                ctx.close();
-            } else if (e.state() == IdleState.WRITER_IDLE) {
+                    proxiedConnection.log(" Read timeout, " + proxiedConnection.getProxyChannelType(ctx.channel()) + ".");
+                    ctx.close();
+                } else if (e.state() == IdleState.WRITER_IDLE) {
                 /* Construct an appropriate ping packet for this connections version and send it via proxy. */
-                proxiedConnection.send(ProxyChannelType.PROXY, ctx.channel(), proxiedConnection.createPing());
+                    proxiedConnection.send(ProxyChannelType.PROXY, ctx.channel(), proxiedConnection.createPing());
+                }
             }
         }
     }
