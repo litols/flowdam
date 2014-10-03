@@ -40,14 +40,9 @@ class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
             throw new IllegalStateException();
         }
 
-        byte[] originalData;
-
         /* Copy the data portion of the OpenFlow packet and store it. */
-        if (length > 8) {
-            originalData = byteBuf.readBytes(length - 8).array();
-        } else {
-            originalData = null;
-        }
+        byteBuf.resetReaderIndex();
+        byte[] originalData = byteBuf.readBytes(length).array();
 
         /* Construct the OpenFlow header and container for both it and data. */
         Header header = new Header(version, typeId, length, transactionId);
@@ -59,6 +54,7 @@ class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
         /* Call openflowj using our Netty 3.9.X -> Netty 4.0.0 proxy object. */
         OFMessage message = OFFactories.getGenericReader().readFrom(new NettyCompatibilityChannelBuffer(byteBuf));
 
+        /* Container object for header, raw data and openflowj message. */
         Container container = new Container(header, originalData, type, message);
 
         /* Add to the Netty pipeline. */

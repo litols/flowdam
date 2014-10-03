@@ -143,10 +143,31 @@ public class ProxiedConnection {
         log(true, downstreamContainer);
     }
 
+    /**
+     * Log the contents of a container.
+     *
+     * @param fromController true if container is from the controller, false if from switch
+     * @param container the container to be logged
+     */
     public void log(boolean fromController, Container container) {
+        if (container.getData() != null) {
+            System.out.print("DATA " + (fromController ? "C->S" : "S->C")  + ": [ ");
+            for (int i = 0; i < container.getData().length; i++) {
+                System.out.print(container.getData()[i] + " ");
+            }
+            System.out.println(" ]");
+        } else {
+            System.out.println("NODATA " + (fromController ? "C->S" : "S->C"));
+        }
+
         log("[" + (fromController ? "C->S" : "S->C") + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]" + container.getPacket().toString());
     }
 
+    /**
+     * Log generic text about this ProxiedConnection.
+     *
+     * @param log text to be logged
+     */
     public void log(String log) {
         StringBuilder stringBuilder = new StringBuilder();
 
