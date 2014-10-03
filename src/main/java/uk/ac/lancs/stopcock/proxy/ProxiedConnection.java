@@ -6,12 +6,22 @@
  */
 package uk.ac.lancs.stopcock.proxy;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import io.netty.util.ReferenceCountUtil;
+import org.projectfloodlight.openflow.protocol.OFEchoReply;
+import org.projectfloodlight.openflow.protocol.OFEchoRequest;
+import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFHello;
+import org.projectfloodlight.openflow.protocol.OFVersion;
+import uk.ac.lancs.stopcock.netty.NettyCompatibilityChannelBuffer;
 import uk.ac.lancs.stopcock.openflow.Container;
+import uk.ac.lancs.stopcock.openflow.Header;
 import uk.ac.lancs.stopcock.openflow.Type;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Queue;
 
 /**
@@ -19,6 +29,9 @@ import java.util.Queue;
  * controller outgoing connection.
  */
 public class ProxiedConnection {
+    /** Echo data for our own echo requests/replies. */
+    private static byte[] ECHO_DATA = new byte[] { 0x53, 0x74, 0x6f, 0x70, 0x63, 0x6f, 0x63, 0x6b };
+
     /** Unique connection ID. */
     private int uniqueId;
     /** Datapath ID */
@@ -27,8 +40,12 @@ public class ProxiedConnection {
     private String datapathIdString;
     /** Netty channel used for the switch connection. */
     private Channel upstream;
+    /** Upstream version. */
+    private OFVersion upstreamVersion;
     /** Netty channel used for the controller connection. */
     private Channel downstream;
+    /** Downstream version. */
+    private OFVersion downstreamVersion;
     /** Flag to specify if the downstream connection has reached channelActive. */
     private boolean downstreamActive = false;
     /** Queue for outgoing packets to controller which could not yet be sent. */
@@ -111,56 +128,100 @@ public class ProxiedConnection {
     }
 
     /**
-     * Receive an OpenFlow Container (with header, data and possible message) from the upstream channel, it must be
-     * relayed to the downstream channel (if open) alternatively it must be queued.
+     * Construct a suitable OpenFlow echo request based upon the OpenFlow version the upstream channel advertised
+     * version.
      *
-     * @param upstreamContainer the received container
+     * @return Container with a suitable echo request
      */
-    public synchronized void receiveUpstream(Container upstreamContainer) {
-        if (downstream == null || !downstreamActive) {
-            downstreamQueue.add(upstreamContainer);
-        } else {
-            downstream.writeAndFlush(upstreamContainer);
-        }
+    public Container createPing() {
+        ByteBuf byteBuf = upstream.alloc().buffer(8);
+        NettyCompatibilityChannelBuffer compatBuffer = new NettyCompatibilityChannelBuffer(byteBuf);
 
-        /* Record the datapath ID if it passed through. */
-        if (upstreamContainer.getMessageType() == Type.OFPT_FEATURES_REPLY) {
-            OFFeaturesReply ofFeaturesReply = (OFFeaturesReply) upstreamContainer.getPacket();
-            setDatapathId(ofFeaturesReply.getDatapathId().getBytes());
-        }
+        OFEchoRequest request = OFFactories.getFactory(upstreamVersion).echoRequest(ECHO_DATA);
+        request.writeTo(compatBuffer);
 
-        log(false, upstreamContainer);
+        byte[] rawData = new byte[compatBuffer.readableBytes()];
+
+        compatBuffer.resetReaderIndex();
+        compatBuffer.readBytes(rawData);
+
+        ReferenceCountUtil.release(byteBuf);
+
+        Header header = new Header((short) upstreamVersion.getWireVersion(), (short) Type.OFPT_ECHO_REQUEST.getId(), 8, request.getXid());
+        return new Container(header, rawData, Type.OFPT_ECHO_REQUEST, request);
     }
 
     /**
-     * Receive an OpenFlow Container (with header, data and possible message) from the downstream channel, it must be
-     * relayed to the upstream channel.
+     * Receive a container and process it, forwarding it onwards if required.
      *
-     * @param downstreamContainer the received container
+     * @param incoming the channel the container was received upon
+     * @param container the container being received
      */
-    public synchronized void receiveDownstream(Container downstreamContainer) {
-        upstream.writeAndFlush(downstreamContainer);
-        log(true, downstreamContainer);
+    public synchronized void receive(Channel incoming, Container container) {
+        ProxyChannelType channelSource = (incoming == upstream ? ProxyChannelType.SWITCH : ProxyChannelType.CONTROLLER);
+        ProxyChannelType channelDestination = (incoming != upstream ? ProxyChannelType.SWITCH : ProxyChannelType.CONTROLLER);
+
+        /* Intercept echo replies which are destined for the proxy, and as such shouldn't be forwarded. */
+        if (container.getMessageType() == Type.OFPT_ECHO_REPLY) {
+            OFEchoReply ofEchoReply = (OFEchoReply) container.getPacket();
+
+            if (Arrays.equals(ECHO_DATA, ofEchoReply.getData())) {
+                channelDestination = ProxyChannelType.PROXY;
+            }
+        }
+
+        /* Intercept the HELLO and record the OpenFlow version. */
+        if (container.getMessageType() == Type.OFPT_HELLO) {
+            OFHello ofHello = (OFHello) container.getPacket();
+
+            if (channelSource == ProxyChannelType.SWITCH) {
+                upstreamVersion = ofHello.getVersion();
+            } else {
+                downstreamVersion = ofHello.getVersion();
+            }
+        }
+
+        /* Record the datapath ID if it passed through. */
+        if (container.getMessageType() == Type.OFPT_FEATURES_REPLY) {
+            OFFeaturesReply ofFeaturesReply = (OFFeaturesReply) container.getPacket();
+            setDatapathId(ofFeaturesReply.getDatapathId().getBytes());
+        }
+
+        log(channelSource, channelDestination, container);
+
+        if (channelDestination != ProxyChannelType.PROXY) {
+            send(channelSource, channelDestination, container);
+        }
+    }
+
+    public synchronized void send(ProxyChannelType channelSource, Channel destination, Container container) {
+        ProxyChannelType channelDestination = (destination == upstream ? ProxyChannelType.SWITCH : ProxyChannelType.CONTROLLER);
+        send(channelSource, channelDestination, container);
+    }
+
+    public synchronized void send(ProxyChannelType channelSource, ProxyChannelType channelDestination, Container container) {
+        Channel outputChannel = channelDestination == ProxyChannelType.SWITCH ? upstream : downstream;
+
+        if (channelSource == ProxyChannelType.PROXY) {
+            log(channelSource, channelDestination, container);
+        }
+
+        if ((outputChannel != downstream) || downstreamActive) {
+            outputChannel.writeAndFlush(container);
+        } else {
+            downstreamQueue.add(container);
+        }
     }
 
     /**
      * Log the contents of a container.
      *
-     * @param fromController true if container is from the controller, false if from switch
+     * @param channelSource where the source of this container was
+     * @param channelDestination where the destination of this container is
      * @param container the container to be logged
      */
-    public void log(boolean fromController, Container container) {
-        if (container.getData() != null) {
-            System.out.print("DATA " + (fromController ? "C->S" : "S->C")  + ": [ ");
-            for (int i = 0; i < container.getData().length; i++) {
-                System.out.print(container.getData()[i] + " ");
-            }
-            System.out.println(" ]");
-        } else {
-            System.out.println("NODATA " + (fromController ? "C->S" : "S->C"));
-        }
-
-        log("[" + (fromController ? "C->S" : "S->C") + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]" + container.getPacket().toString());
+    public void log(ProxyChannelType channelSource, ProxyChannelType channelDestination, Container container) {
+        log("[" + channelSource + "->" + channelDestination + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]" + container.getPacket().toString());
     }
 
     /**
@@ -177,6 +238,13 @@ public class ProxiedConnection {
         stringBuilder.append(uniqueId);
         stringBuilder.append("][");
         stringBuilder.append(datapathIdString);
+        stringBuilder.append("][");
+
+        if (upstream != null && upstream.remoteAddress() != null) {
+            stringBuilder.append(upstream.remoteAddress());
+        } else {
+            stringBuilder.append("/0.0.0.0:0");
+        }
         stringBuilder.append("]");
         stringBuilder.append(log);
 
@@ -216,5 +284,9 @@ public class ProxiedConnection {
      */
     public byte[] getDatapathId() {
         return datapathId;
+    }
+
+    public ProxyChannelType getProxyChannelType(Channel channel) {
+        return (channel == downstream ? ProxyChannelType.CONTROLLER : ProxyChannelType.SWITCH);
     }
 }

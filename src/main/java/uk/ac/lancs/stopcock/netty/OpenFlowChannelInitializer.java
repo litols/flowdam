@@ -10,7 +10,10 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.timeout.IdleStateHandler;
 import uk.ac.lancs.stopcock.proxy.Proxy;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * OpenFlowChannelInitializer provides the facility to setup up a Netty connection capable of processing OpenFlow
@@ -50,8 +53,7 @@ public class OpenFlowChannelInitializer extends ChannelInitializer<SocketChannel
 
         /* Idle Handler, no longer then quarter of a millisecond idle before echo request, no more then half a second
          * before we need to kill it.  */
-        /* TODO - Take settings from Proxy. */
-        //pipeline.addLast("idleStateHandler", new IdleStateHandler(250, 500, 0, TimeUnit.MILLISECONDS));
+        pipeline.addLast("idleStateHandler", new IdleStateHandler(5000, 250, 0, TimeUnit.MILLISECONDS));
 
         /* OpenFlow Processor. */
         if (downstream) {

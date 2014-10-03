@@ -10,8 +10,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import uk.ac.lancs.stopcock.proxy.ProxiedConnection;
 import uk.ac.lancs.stopcock.proxy.Proxy;
 import uk.ac.lancs.stopcock.openflow.Container;
+import uk.ac.lancs.stopcock.proxy.ProxyChannelType;
 
 /**
  * OpenFlowChannelInboundHandler looks after idle timeouts and other common functionality between an upstream and
@@ -36,13 +38,24 @@ abstract class OpenFlowChannelInboundHandler extends SimpleChannelInboundHandler
 
         /* In case the connection becomes idle we must attempt to verify it is still alive. */
         if (evt instanceof IdleStateEvent) {
+            ProxiedConnection proxiedConnection = proxy.getProxiedConnection(ctx.channel());
+
             IdleStateEvent e = (IdleStateEvent) evt;
             if (e.state() == IdleState.READER_IDLE) {
                 /* No packets have been received in a reasonable time period and as such should now be closed. */
+                proxiedConnection.log(" Read timeout, " + proxiedConnection.getProxyChannelType(ctx.channel()) + ".");
                 ctx.close();
             } else if (e.state() == IdleState.WRITER_IDLE) {
-                // TODO - Send echo request!
+                /* Construct an appropriate ping packet for this connections version and send it via proxy. */
+                proxiedConnection.send(ProxyChannelType.PROXY, ctx.channel(), proxiedConnection.createPing());
             }
         }
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Container container) throws Exception {
+        /* Send the Container via the proxy onwards. */
+        ProxiedConnection proxiedConnection = proxy.getProxiedConnection(channelHandlerContext.channel());
+        proxiedConnection.receive(channelHandlerContext.channel(), container);
     }
 }

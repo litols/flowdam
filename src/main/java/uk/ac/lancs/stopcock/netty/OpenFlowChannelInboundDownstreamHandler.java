@@ -26,13 +26,6 @@ class OpenFlowChannelInboundDownstreamHandler extends OpenFlowChannelInboundHand
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Container container) throws Exception {
-        /* Send the Container via the proxy onwards. */
-        ProxiedConnection proxiedConnection = proxy.getProxiedConnection(channelHandlerContext.channel());
-        proxiedConnection.receiveDownstream(container);
-    }
-
-    @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
 

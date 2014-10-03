@@ -66,12 +66,21 @@ public class Proxy {
     }
 
     /**
+     * Get an InetSocketAddress where to connect to.
+     *
+     * @return InetSocketAddress to connect onwards to
+     */
+    public InetSocketAddress getConnectTo() {
+        return connectTo;
+    }
+
+    /**
      * Create a new Netty channel which is an outgoing connection to the onwards controller.
      *
-     * @return ChannelFuture (which contains Channel) for the new connection
+     * @return Channel a initialised channel which needs to be connected.
      */
-    public ChannelFuture connectOnwards() {
-        return clientBootstrap.connect(connectTo);
+    public Channel onwardsChannel() {
+        return clientBootstrap.bind(new InetSocketAddress(0)).channel();
     }
 
     /**

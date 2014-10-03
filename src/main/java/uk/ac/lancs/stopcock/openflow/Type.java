@@ -35,7 +35,7 @@ public enum Type {
 
     /* Controller command messages. */
     OFPT_PACKET_OUT(13, Direction.CONTROLLER_SWITCH),
-    OFPT_FLOW_MODE(14, Direction.CONTROLLER_SWITCH),
+    OFPT_FLOW_MOD(14, Direction.CONTROLLER_SWITCH),
     OFPT_GROUP_MOD(15, Direction.CONTROLLER_SWITCH),
     OFPT_PORT_MOD(16, Direction.CONTROLLER_SWITCH),
     OFPT_TABLE_MOD(17, Direction.CONTROLLER_SWITCH),
