@@ -33,8 +33,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ProxiedConnection {
     /** Echo data for our own echo requests/replies. */
-    private static byte[] ECHO_DATA = new byte[] { 0x53, 0x74, 0x6f, 0x70, 0x63, 0x6f, 0x63, 0x6b };
+    private static final byte[] ECHO_DATA = new byte[] { 0x53, 0x74, 0x6f, 0x70, 0x63, 0x6f, 0x63, 0x6b };
 
+    /** Owning Proxy. */
+    private Proxy owningProxy;
     /** Unique connection ID. */
     private int uniqueId;
     /** Datapath ID */
@@ -62,9 +64,11 @@ public class ProxiedConnection {
     /**
      * Construct a new ProxiedConnection with a unique ID for reference and log tracking.
      *
+     * @param proxy which proxy object owns this connection
      * @param uniqueId unique ID to identify this connection
      */
-    public ProxiedConnection(int uniqueId) {
+    public ProxiedConnection(Proxy proxy, int uniqueId) {
+        owningProxy = proxy;
         this.uniqueId = uniqueId;
         setDatapathId(new byte[8]);
 
@@ -257,7 +261,9 @@ public class ProxiedConnection {
             downstreamReceived.get(container.getMessageType()).incrementAndGet();
         }
 
-        log("[" + channelSource + "->" + channelDestination + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]" + container.getPacket().toString());
+        if (owningProxy.isLogged(container.getMessageType())) {
+            log("[" + channelSource + "->" + channelDestination + "][" + container.getHeader().getTransactionId() + "][" + container.getMessageType() + "]" + container.getPacket().toString());
+        }
     }
 
     /**

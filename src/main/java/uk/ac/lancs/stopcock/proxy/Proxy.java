@@ -16,9 +16,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import uk.ac.lancs.stopcock.netty.OpenFlowChannelInitializer;
+import uk.ac.lancs.stopcock.openflow.Type;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -52,15 +55,20 @@ public class Proxy {
     /* Map to link channels to a proxied connection. */
     private Map<Channel, ProxiedConnection> proxiedConnections = new HashMap<>();
 
+    /* List of all OpenFlow message types to log. */
+    private List<Type> loggedTypes;
+
     /**
      * Create a new Proxy object which will automatically be capable of handling incoming connections.
      *
      * @param listenOn host/port to listen for connections on
      * @param connectTo host/port to connect out to
+     * @param loggedTypes list of OpenFlow message types to log
      */
-    public Proxy(InetSocketAddress listenOn, InetSocketAddress connectTo) {
+    public Proxy(InetSocketAddress listenOn, InetSocketAddress connectTo, List<Type> loggedTypes) {
         this.listenOn = listenOn;
         this.connectTo = connectTo;
+        this.loggedTypes = loggedTypes;
 
         /* Set up Netty groups, channels and pipelines. */
         serverBootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new OpenFlowChannelInitializer(this, false)).option(ChannelOption.TCP_NODELAY, true);
@@ -95,7 +103,7 @@ public class Proxy {
      * @return ProxiedConnection representing this new Upstream connection
      */
     public synchronized ProxiedConnection registerUpstream(Channel newUpstream) {
-        ProxiedConnection proxiedConnection = new ProxiedConnection(uniqueIDSource.incrementAndGet());
+        ProxiedConnection proxiedConnection = new ProxiedConnection(this, uniqueIDSource.incrementAndGet());
         proxiedConnections.put(newUpstream, proxiedConnection);
 
         proxiedConnection.registerUpstream(newUpstream);
@@ -173,5 +181,15 @@ public class Proxy {
      */
     public long getIdleWriteTimeout() {
         return idleWriteTimeout;
+    }
+
+    /**
+     * Check to see if the proxy should log the message type provided.
+     *
+     * @param type message type to check if it's logged
+     * @return true if it should be logged
+     */
+    public boolean isLogged(Type type) {
+        return loggedTypes.contains(type);
     }
 }
