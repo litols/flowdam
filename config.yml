@@ -1,0 +1,20 @@
+# Example Configuration File
+proxies:
+  # One section per OpenFlow proxy.
+  main:
+    # Port to listen on for incoming connections from Switches.
+    localPort: 6633
+    # Remote address to connect onwards to.
+    remoteAddress: localhost
+    # Remote port to connect onwards to.
+    remotePort: 6666
+    # Map of OpenFlow message types to record, names as defined by the OpenFlow specification, also enumerated in
+    # uk.ac.lancs.stopcock.openflow.Type.
+    loggedTypes:
+      OFPT_ERROR: true
+      OFPT_FEATURES_REPLY: true
+      OFPT_PORT_STATUS: true
+      OFPT_PACKET_IN: true
+      OFPT_PACKET_OUT: true
+      OFPT_FLOW_MOD: true
+      OFPT_TABLE_MOD: true
