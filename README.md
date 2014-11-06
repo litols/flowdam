@@ -8,14 +8,23 @@ controllers. It aims to be past and future protocol compatible with graceful han
 
 License
 -------
-Main Project:
-  All rights reserved, unauthorised distribution of source code, compiled binary or usage is expressly prohibited.
+Copyright 2014 University of Lancaster
 
-Configuration System (uk.ac.lancs.stopcock.configuration):
-  Under license to Lancaster University for academic and non commercial use in the Stopcock project from 
-  Peter Wood <peter@alastria.net>, any distribution in source or binary form outside Lancaster University
-  is expressly prohibited. Configuration system was written solely outside Lancaster University, all rights
-  are reserved.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Developers
+----------
+Peter Wood <p.wood@lancaster.ac.uk>
 
 Design Brief
 ------------
