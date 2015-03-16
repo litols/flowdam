@@ -24,6 +24,7 @@ import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFHello;
 import org.projectfloodlight.openflow.protocol.OFVersion;
+import uk.ac.lancs.stopcock.Stopcock;
 import uk.ac.lancs.stopcock.netty.NettyCompatibilityChannelBuffer;
 import uk.ac.lancs.stopcock.openflow.Container;
 import uk.ac.lancs.stopcock.openflow.Header;
@@ -299,7 +300,7 @@ public class ProxiedConnection {
         stringBuilder.append("]");
         stringBuilder.append(log);
 
-        System.out.println(stringBuilder);
+        Stopcock.logger.debug(stringBuilder.toString());
     }
 
     /**

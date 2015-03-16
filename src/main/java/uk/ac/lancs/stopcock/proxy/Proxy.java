@@ -18,7 +18,6 @@ package uk.ac.lancs.stopcock.proxy;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -28,7 +27,6 @@ import uk.ac.lancs.stopcock.netty.OpenFlowChannelInitializer;
 import uk.ac.lancs.stopcock.openflow.Type;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

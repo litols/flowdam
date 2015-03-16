@@ -33,7 +33,10 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>uk.ac.lancs.stopcock.Stopcock</mainClass>
+                                    <manifestEntries>
+                                        <Main-Class>uk.ac.lancs.stopcock.Stopcock</Main-Class>
+                                        <Class-Path>./log4j-api-2.2.jar;./log4j-core-2.2.jar</Class-Path>
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -73,6 +76,16 @@
             <groupId>org.projectfloodlight</groupId>
             <artifactId>openflowj</artifactId>
             <version>0.3.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.2</version>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>

@@ -26,6 +26,10 @@ Configuration
 -------------
 See included config.yml.
 
+Copy log4j2.xml into the same directory as config.yml for logging.
+
+stopcock.sh is provided as a sample start up script for rc.d style operating systems.
+
 Developers
 ----------
 Peter Wood <p.wood@lancaster.ac.uk>

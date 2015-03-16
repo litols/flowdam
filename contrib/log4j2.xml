@@ -1,0 +1,19 @@
+<Configuration>
+    <Appenders>
+        <RollingFile name="ROLLING" fileName="log" filePattern="log.%d{yyyy-MM-dd}">
+            <PatternLayout>
+                <pattern>%d{ISO8601} %p %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy max="7"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="uk.ac.lancs.stopcock.Stopcock" level="TRACE" />
+        <Root level="TRACE">
+            <AppenderRef ref="ROLLING" />
+        </Root>
+    </Loggers>
+</Configuration>

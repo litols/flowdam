@@ -15,6 +15,8 @@
  */
 package uk.ac.lancs.stopcock;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.ac.lancs.stopcock.configuration.ConfigurationSection;
 import uk.ac.lancs.stopcock.configuration.YAMLConfigurationHandler;
 import uk.ac.lancs.stopcock.openflow.Type;
@@ -33,6 +35,8 @@ import java.util.Map;
  */
 public class Stopcock {
     private static Map<String,Proxy> proxies = new HashMap<>();
+
+    public static Logger logger = LogManager.getLogger(Stopcock.class);
 
     /**
      * Main entry point into Stopcock from the operating system.
@@ -56,7 +60,7 @@ public class Stopcock {
         }
 
         if (!config.isConfigurationSection("proxies")) {
-            System.out.println("No proxies.");
+            logger.warn("No proxies.");
             /* Fail - No Proxies. */
             return;
         }
@@ -64,11 +68,11 @@ public class Stopcock {
         ConfigurationSection proxiesConfig = config.getConfigurationSection("proxies");
 
         for (String proxyName : proxiesConfig.getKeys(false)) {
-            System.out.println("Reading " + proxyName);
+            logger.info("Reading " + proxyName);
             ConfigurationSection proxyConfig = proxiesConfig.getConfigurationSection(proxyName);
 
             if (!proxyConfig.isSet("localPort") || !proxyConfig.isSet("remotePort") || !proxyConfig.isSet("remoteAddress")) {
-                System.out.println("Missing Critical " + proxyName);
+                logger.warn("Missing Critical " + proxyName);
                 /* Fail this proxy . */
                 continue;
             }
@@ -101,7 +105,7 @@ public class Stopcock {
 
             Proxy proxy = new Proxy(localAddress, remoteAddress, loggedTypes);
             proxies.put(proxyName, proxy);
-            System.out.println("Started " + proxyName);
+            logger.info("Started " + proxyName);
         }
     }
 }
