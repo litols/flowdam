@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.netty;
+package com.leafgraph.flowdam.netty;
 
+import com.leafgraph.flowdam.proxy.Proxy;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
-import uk.ac.lancs.stopcock.proxy.Proxy;
 
 import java.util.concurrent.TimeUnit;
 

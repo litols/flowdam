@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.proxy;
+package com.leafgraph.flowdam.proxy;
 
+import com.leafgraph.flowdam.openflow.Header;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.util.ReferenceCountUtil;
@@ -24,11 +25,9 @@ import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFHello;
 import org.projectfloodlight.openflow.protocol.OFVersion;
-import uk.ac.lancs.stopcock.Stopcock;
-import uk.ac.lancs.stopcock.netty.NettyCompatibilityChannelBuffer;
-import uk.ac.lancs.stopcock.openflow.Container;
-import uk.ac.lancs.stopcock.openflow.Header;
-import uk.ac.lancs.stopcock.openflow.Type;
+import com.leafgraph.flowdam.Flowdam;
+import com.leafgraph.flowdam.openflow.Container;
+import com.leafgraph.flowdam.openflow.Type;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -71,6 +70,9 @@ public class ProxiedConnection {
     /** Statistics on number of messages types received from downstream. */
     private Map<Type, AtomicInteger> downstreamReceived = new HashMap<>();
 
+    /** Flag to specify if after the FEATURES_REPLY message received. (= handshake completed.) */
+    private boolean readyForInjectMessage = false;
+
     /**
      * Construct a new ProxiedConnection with a unique ID for reference and log tracking.
      *
@@ -106,7 +108,6 @@ public class ProxiedConnection {
      */
     public synchronized void registerDownstream(Channel downstreamChannel) {
         downstream = downstreamChannel;
-
         log(" Outgoing Upstream Switch Connecting");
     }
 
@@ -119,7 +120,6 @@ public class ProxiedConnection {
         log(" Outgoing Downstream Controller Connected: " + downstream.remoteAddress());
 
         Container container;
-
         /* Purge any queued containers. */
         while ((container = downstreamQueue.poll()) != null) {
             downstream.writeAndFlush(container);
@@ -132,6 +132,7 @@ public class ProxiedConnection {
      */
     public synchronized void unregisterUpstream() {
         upstream = null;
+        readyForInjectMessage = false;
 
         log(" Incoming Upstream Switch Disconnected");
 
@@ -147,6 +148,7 @@ public class ProxiedConnection {
     public synchronized void unregisterDownstream() {
         downstream = null;
         downstreamActive = false;
+        readyForInjectMessage = false;
 
         log(" Outgoing Downstream Controller Disconnected");
 
@@ -163,15 +165,13 @@ public class ProxiedConnection {
      */
     public Container createPing() {
         ByteBuf byteBuf = upstream.alloc().buffer(8);
-        NettyCompatibilityChannelBuffer compatBuffer = new NettyCompatibilityChannelBuffer(byteBuf);
-
         OFEchoRequest request = OFFactories.getFactory(upstreamVersion).echoRequest(ECHO_DATA);
-        request.writeTo(compatBuffer);
+        request.writeTo(byteBuf);
 
-        byte[] rawData = new byte[compatBuffer.readableBytes()];
+        byte[] rawData = new byte[byteBuf.readableBytes()];
 
-        compatBuffer.resetReaderIndex();
-        compatBuffer.readBytes(rawData);
+        byteBuf.resetReaderIndex();
+        byteBuf.readBytes(rawData);
 
         ReferenceCountUtil.release(byteBuf);
 
@@ -219,6 +219,10 @@ public class ProxiedConnection {
 
         if (channelDestination != ProxyChannelType.PROXY) {
             send(channelSource, channelDestination, container);
+            if(container.getMessageType() == Type.OFPT_FEATURES_REPLY) {
+                System.out.println("ready for inject: "+getDatapathIdString());
+                readyForInjectMessage = true;
+            }
         }
     }
 
@@ -243,13 +247,15 @@ public class ProxiedConnection {
      * @param container the container to send
      */
     public synchronized void send(ProxyChannelType channelSource, ProxyChannelType channelDestination, Container container) {
+        // when send OFPT_HELLO controller to switch, may fire NullPointerException.
         Channel outputChannel = channelDestination == ProxyChannelType.SWITCH ? upstream : downstream;
 
         if (channelSource == ProxyChannelType.PROXY) {
             log(channelSource, channelDestination, container);
         }
 
-        if ((outputChannel != downstream) || downstreamActive) {
+        if (outputChannel!=null && ((outputChannel != downstream) || downstreamActive)) {
+            log(channelSource, channelDestination, container);
             outputChannel.writeAndFlush(container);
         } else {
             downstreamQueue.add(container);
@@ -300,7 +306,7 @@ public class ProxiedConnection {
         stringBuilder.append("]");
         stringBuilder.append(log);
 
-        Stopcock.logger.debug(stringBuilder.toString());
+        Flowdam.logger.debug(stringBuilder.toString());
     }
 
     /**
@@ -338,6 +344,10 @@ public class ProxiedConnection {
         return datapathId;
     }
 
+    public String getDatapathIdString(){
+        return datapathIdString;
+    }
+
     /**
      * Look up a ChannelType by providing the Channel.
      *
@@ -364,5 +374,13 @@ public class ProxiedConnection {
      */
     public OFVersion getDownstreamVersion() {
         return downstreamVersion;
+    }
+
+    public Channel getUpstream() {
+        return upstream;
+    }
+
+    public boolean isReadyForInjectMessage() {
+        return readyForInjectMessage;
     }
 }

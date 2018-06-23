@@ -5,11 +5,11 @@ proxies:
     # Port to listen on for incoming connections from Switches.
     localPort: 6633
     # Remote address to connect onwards to.
-    remoteAddress: localhost
+    remoteAddress: 192.168.11.141
     # Remote port to connect onwards to.
-    remotePort: 6666
+    remotePort: 6653
     # Map of OpenFlow message types to record, names as defined by the OpenFlow specification, also enumerated in
-    # uk.ac.lancs.stopcock.openflow.Type.
+    # Type.
     loggedTypes:
       OFPT_ERROR: true
       OFPT_FEATURES_REPLY: true

@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.netty;
+package com.leafgraph.flowdam.netty;
 
+import com.leafgraph.flowdam.openflow.Container;
+import com.leafgraph.flowdam.proxy.ProxiedConnection;
+import com.leafgraph.flowdam.proxy.Proxy;
 import io.netty.channel.ChannelHandlerContext;
-import uk.ac.lancs.stopcock.proxy.ProxiedConnection;
-import uk.ac.lancs.stopcock.proxy.Proxy;
+import org.projectfloodlight.openflow.protocol.OFMessage;
 
 /**
  * OpenFlowChannelInboundDownstreamHandler is the end of the Netty pipeline for outgoing connections to controllers
@@ -41,6 +43,15 @@ class OpenFlowChannelInboundDownstreamHandler extends OpenFlowChannelInboundHand
          * active to allow release of queued Containers. */
         ProxiedConnection proxiedConnection = proxy.getProxiedConnection(ctx.channel());
         proxiedConnection.activeDownstream();
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, Container container) throws Exception {
+        ProxiedConnection proxiedConnection = proxy.getProxiedConnection(ctx.channel());
+
+        // do anything to OpenFlow messages here!
+
+        super.channelRead0(ctx, container);
     }
 
     @Override

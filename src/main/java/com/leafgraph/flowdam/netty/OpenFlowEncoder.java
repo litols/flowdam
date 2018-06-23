@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.netty;
+package com.leafgraph.flowdam.netty;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
-import uk.ac.lancs.stopcock.openflow.Container;
+import com.leafgraph.flowdam.openflow.Container;
 
 import java.util.List;
 

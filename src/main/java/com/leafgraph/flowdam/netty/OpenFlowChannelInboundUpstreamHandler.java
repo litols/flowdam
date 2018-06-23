@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.netty;
+package com.leafgraph.flowdam.netty;
 
+import com.leafgraph.flowdam.Flowdam;
+import com.leafgraph.flowdam.openflow.Container;
+import com.leafgraph.flowdam.proxy.ProxiedConnection;
+import com.leafgraph.flowdam.proxy.Proxy;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
-import uk.ac.lancs.stopcock.proxy.Proxy;
 
 /**
  * OpenFlowChannelInboundUpstreamHandler is the end of the Netty pipeline for incoming connections from switches
@@ -43,21 +46,32 @@ class OpenFlowChannelInboundUpstreamHandler extends OpenFlowChannelInboundHandle
         final Channel upstreamChannel = ctx.channel();
         proxy.registerUpstream(upstreamChannel);
 
-        /* Register onwards channel against self in proxy, this needs to be done before the connect otherwise there
-         * is a race condition. */
-        final Channel downstreamChannel = proxy.onwardsChannel();
+        /* Attempt connect. */
+        ChannelFuture future = proxy.getClientBootstrap().connect(proxy.getConnectTo());
+
+        final Channel downstreamChannel = future.channel();
         proxy.registerDownstream(downstreamChannel, upstreamChannel);
 
-        /* Attempt connect. */
-        ChannelFuture future = downstreamChannel.connect(proxy.getConnectTo());
-
+        future.awaitUninterruptibly();
         /* Add callback to handle connection failure, closing the upstream channel should the downstream fail. */
         future.addListener(channelFuture -> {
             if (!channelFuture.isSuccess()) {
+                Flowdam.logger.info("downstream create failed.");
+                channelFuture.cause().printStackTrace();
                 upstreamChannel.close();
             }
         });
     }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Container container) throws Exception {
+        ProxiedConnection proxiedConnection = proxy.getProxiedConnection(channelHandlerContext.channel());
+
+        // do anything to OpenFlow messages here!
+
+        super.channelRead0(channelHandlerContext, container);
+    }
+
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {

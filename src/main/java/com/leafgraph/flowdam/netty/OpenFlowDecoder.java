@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.netty;
+package com.leafgraph.flowdam.netty;
 
+import com.leafgraph.flowdam.openflow.Header;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFMessage;
-import uk.ac.lancs.stopcock.openflow.Container;
-import uk.ac.lancs.stopcock.openflow.Header;
-import uk.ac.lancs.stopcock.openflow.Type;
+import com.leafgraph.flowdam.openflow.Container;
+import com.leafgraph.flowdam.openflow.Type;
 
 import java.util.List;
 
@@ -51,7 +51,9 @@ class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
 
         /* Copy the data portion of the OpenFlow packet and store it. */
         byteBuf.resetReaderIndex();
-        byte[] originalData = byteBuf.readBytes(length).array();
+//        byte[] originalData = byteBuf.readBytes(length).array();
+        byte[] originalData = new byte[byteBuf.readableBytes()];
+        byteBuf.getBytes(byteBuf.readerIndex(), originalData);
 
         /* Construct the OpenFlow header and container for both it and data. */
         Header header = new Header(version, typeId, length, transactionId);
@@ -60,8 +62,8 @@ class OpenFlowDecoder extends MessageToMessageDecoder<ByteBuf> {
         /* Get full openflow packet for processing with openflowj */
         byteBuf.resetReaderIndex();
 
-        /* Call openflowj using our Netty 3.9.X -> Netty 4.0.0 proxy object. */
-        OFMessage message = OFFactories.getGenericReader().readFrom(new NettyCompatibilityChannelBuffer(byteBuf));
+        /* Call openflowj using generic reader object. */
+        OFMessage message = OFFactories.getGenericReader().readFrom(byteBuf);
 
         /* Container object for header, raw data and openflowj message. */
         Container container = new Container(header, originalData, type, message);

@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.proxy;
+package com.leafgraph.flowdam.openflow;
 
 /**
- * Describe the type of channel.
+ * Direction of different Message Types, using odd OpenFlow names.
  */
-public enum ProxyChannelType {
-    /** Channel type is a switch. */
-    SWITCH,
-    /** Channel type is a controller. */
-    CONTROLLER,
-    /** Channel type doesn't really exist, sent to proxy. */
-    PROXY
+public enum Direction {
+    /** Symmetric, can be sent either direction. */
+    SYMMETRIC,
+    /** Controller->Switch, sent from the controller to switch. */
+    CONTROLLER_SWITCH,
+    /** Asynchronous, sent from switch to controller. */
+    ASYNCHRONOUS
 }

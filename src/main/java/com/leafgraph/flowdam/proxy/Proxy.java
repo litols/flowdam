@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.proxy;
+package com.leafgraph.flowdam.proxy;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -23,13 +23,18 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import uk.ac.lancs.stopcock.netty.OpenFlowChannelInitializer;
-import uk.ac.lancs.stopcock.openflow.Type;
+import com.leafgraph.flowdam.netty.OpenFlowChannelInitializer;
+import com.leafgraph.flowdam.openflow.Type;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -55,12 +60,13 @@ public class Proxy {
     private InetSocketAddress connectTo;
 
     /** Milliseconds before a Channel should be considered dead from lack of messages. */
-    private long idleReadTimeout = 2500;
+    private long idleReadTimeout = 300000;
     /** Milliseconds before a Channel should send a ECHO request if its idle. */
-    private long idleWriteTimeout = 500;
+    private long idleWriteTimeout = 300000;
 
     /* Map to link channels to a proxied connection. */
     private Map<Channel, ProxiedConnection> proxiedConnections = new HashMap<>();
+    private ArrayList<ProxiedConnection> proxiedConnectionsList = new ArrayList<>();
 
     /* List of all OpenFlow message types to log. */
     private List<Type> loggedTypes;
@@ -94,13 +100,8 @@ public class Proxy {
         return connectTo;
     }
 
-    /**
-     * Create a new Netty channel which is an outgoing connection to the onwards controller.
-     *
-     * @return Channel a initialised channel which needs to be connected.
-     */
-    public Channel onwardsChannel() {
-        return clientBootstrap.bind(new InetSocketAddress(0)).channel();
+    public Bootstrap getClientBootstrap() {
+        return clientBootstrap;
     }
 
     /**
@@ -112,6 +113,7 @@ public class Proxy {
     public synchronized ProxiedConnection registerUpstream(Channel newUpstream) {
         ProxiedConnection proxiedConnection = new ProxiedConnection(this, uniqueIDSource.incrementAndGet());
         proxiedConnections.put(newUpstream, proxiedConnection);
+        proxiedConnectionsList.add(proxiedConnection);
 
         proxiedConnection.registerUpstream(newUpstream);
 
@@ -142,6 +144,11 @@ public class Proxy {
     public synchronized void unregisterUpstream(Channel channel) {
         ProxiedConnection proxiedConnection = proxiedConnections.remove(channel);
 
+        if (proxiedConnectionsList.contains(proxiedConnection)){
+            proxiedConnectionsList.remove(proxiedConnection);
+        }
+
+
         if (proxiedConnection != null) {
             proxiedConnection.unregisterUpstream();
         }
@@ -154,6 +161,10 @@ public class Proxy {
      */
     public synchronized void unregisterDownstream(Channel channel) {
         ProxiedConnection proxiedConnection = proxiedConnections.remove(channel);
+
+        if (proxiedConnectionsList.contains(proxiedConnection)){
+            proxiedConnectionsList.remove(proxiedConnection);
+        }
 
         if (proxiedConnection != null) {
             proxiedConnection.unregisterDownstream();

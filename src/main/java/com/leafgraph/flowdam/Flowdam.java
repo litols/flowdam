@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock;
+package com.leafgraph.flowdam;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import uk.ac.lancs.stopcock.configuration.ConfigurationSection;
-import uk.ac.lancs.stopcock.configuration.YAMLConfigurationHandler;
-import uk.ac.lancs.stopcock.openflow.Type;
-import uk.ac.lancs.stopcock.proxy.Proxy;
+import com.leafgraph.flowdam.proxy.Proxy;
+import com.leafgraph.flowdam.configuration.ConfigurationSection;
+import com.leafgraph.flowdam.configuration.YAMLConfigurationHandler;
+import com.leafgraph.flowdam.openflow.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,15 +31,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Main Stopcock entry point and management class.
+ * Main Flowdam entry point and management class.
  */
-public class Stopcock {
+public class Flowdam {
     private static Map<String,Proxy> proxies = new HashMap<>();
 
-    public static Logger logger = LogManager.getLogger(Stopcock.class);
+    public static Logger logger = LoggerFactory.getLogger(Flowdam.class);
 
     /**
-     * Main entry point into Stopcock from the operating system.
+     * Main entry point into Flowdam from the operating system.
      *
      * @param args arguments from operating system
      */

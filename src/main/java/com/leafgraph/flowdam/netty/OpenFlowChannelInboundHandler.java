@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.ac.lancs.stopcock.netty;
+package com.leafgraph.flowdam.netty;
 
+import com.leafgraph.flowdam.proxy.ProxiedConnection;
+import com.leafgraph.flowdam.proxy.Proxy;
+import com.leafgraph.flowdam.proxy.ProxyChannelType;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import uk.ac.lancs.stopcock.openflow.Container;
-import uk.ac.lancs.stopcock.proxy.ProxiedConnection;
-import uk.ac.lancs.stopcock.proxy.Proxy;
-import uk.ac.lancs.stopcock.proxy.ProxyChannelType;
+import com.leafgraph.flowdam.openflow.Container;
 
 /**
  * OpenFlowChannelInboundHandler looks after idle timeouts and other common functionality between an upstream and
@@ -53,11 +53,11 @@ abstract class OpenFlowChannelInboundHandler extends SimpleChannelInboundHandler
             if (proxiedConnection.getDownstreamVersion() != null && proxiedConnection.getUpstreamVersion() != null) {
                 IdleStateEvent e = (IdleStateEvent) evt;
                 if (e.state() == IdleState.READER_IDLE) {
-                /* No packets have been received in a reasonable time period and as such should now be closed. */
+                    /* No packets have been received in a reasonable time period and as such should now be closed. */
                     proxiedConnection.log(" Read timeout, " + proxiedConnection.getProxyChannelType(ctx.channel()) + ".");
                     ctx.close();
                 } else if (e.state() == IdleState.WRITER_IDLE) {
-                /* Construct an appropriate ping packet for this connections version and send it via proxy. */
+                    /* Construct an appropriate ping packet for this connections version and send it via proxy. */
                     proxiedConnection.send(ProxyChannelType.PROXY, ctx.channel(), proxiedConnection.createPing());
                 }
             }
