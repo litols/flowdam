@@ -76,4 +76,4 @@ fabric.properties
 # flowdam setting
 target/
 log*
-config.yml
+/config.yml
